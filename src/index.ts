@@ -1,9 +1,9 @@
 
 import { loadConfig } from "./config.js";
 
-import { OpenAICompatibleProvider } from "./providers/openai-compatible-provider.js";
+import { Agent } from "./core/agent.js";
 
-import type { Message } from "./core/message.js";
+import { OpenAICompatibleProvider } from "./providers/openai-compatible-provider.js";
 
 async function main() {
   const config = loadConfig();
@@ -15,22 +15,27 @@ async function main() {
     timeoutMs: config.timeoutMs,
   });
 
-  const messages: Message[] = [
-    {
-      role: "system",
-      content: "You are a helpful assistant.",
-    },
-    {
-      role: "user",
-      content: "Explain how an HTTP server works in simple terms.",
-    },
-  ];
+  const agent = new Agent(provider, {
+    systemPrompt:
+      "You are xbow, a helpful AI assistant. " +
+      "Explain technical concepts clearly.",
+  });
 
-  const response = await provider.generate(messages);
+  const firstResponse = await agent.run(
+    "What is Node.js?",
+  );
 
-  console.log("\nxbow response:\n");
-  console.log(response.content);
-  console.log("\nFinish reason:", response.finishReason);
+  console.log("\nxbow:", firstResponse);
+
+  const secondResponse = await agent.run(
+    "How does its event loop work?",
+  );
+
+  console.log("\nxbow:", secondResponse);
+
+  console.log("\nConversation history:");
+
+  console.log(agent.getMessages());
 }
 
 main().catch((error: unknown) => {
